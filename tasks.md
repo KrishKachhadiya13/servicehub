@@ -23,10 +23,10 @@
 - [x] Git configuration
 
 ## Phase 2 - DATABASE + SEED DATA
-- [ ] SQLAlchemy models
-- [ ] Relationships, Constraints, Indexes
-- [ ] Alembic setup & Initial migrations
-- [ ] Seed script (Roles, Departments, Demo users, Categories, SLA, sample data)
+- [x] SQLAlchemy models
+- [x] Relationships, Constraints, Indexes
+- [x] Alembic setup & Initial migrations
+- [x] Seed script (Roles, Departments, Demo users, Categories, SLA, sample data)
 
 ## Phase 3 - AUTHENTICATION + AUTHORIZATION
 - [ ] Registration
