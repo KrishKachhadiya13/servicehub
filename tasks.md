@@ -29,14 +29,14 @@
 - [x] Seed script (Roles, Departments, Demo users, Categories, SLA, sample data)
 
 ## Phase 3 - AUTHENTICATION + AUTHORIZATION
-- [ ] Registration
-- [ ] Login
-- [ ] Password hashing
-- [ ] JWT authentication
-- [ ] Current user endpoint
-- [ ] Protected endpoints
-- [ ] Role-based authorization
-- [ ] Frontend auth state
+- [x] Registration
+- [x] Login
+- [x] Password hashing
+- [x] JWT authentication
+- [x] Current user endpoint
+- [x] Protected endpoints
+- [x] Role-based authorization
+- [x] Frontend auth state
 
 ## Phase 4 - CORE TICKETS
 - [ ] Create ticket
