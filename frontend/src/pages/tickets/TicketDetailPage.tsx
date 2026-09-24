@@ -5,6 +5,7 @@ import type { Comment, TicketHistory } from '../../types/comment';
 import { getTicketApi, updateTicketStatusApi, updateTicketPriorityApi, assignTicketApi, getTicketCommentsApi, addCommentApi, getTicketHistoryApi } from '../../api/tickets';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { PriorityBadge } from '../../components/common/PriorityBadge';
+import { SLATimer } from '../../components/tickets/SLATimer';
 import { useAuth } from '../../hooks/useAuth';
 
 export const TicketDetailPage: React.FC = () => {
@@ -138,19 +139,8 @@ export const TicketDetailPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{ticket.title}</h1>
           </div>
 
-          <div className="flex flex-col items-end">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Dynamic SLA State</span>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                ticket.sla_status === 'SAFE'
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                  : ticket.sla_status === 'AT_RISK'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-              }`}
-            >
-              {ticket.sla_status.replace('_', ' ')}
-            </span>
+          <div className="flex-shrink-0 w-full md:w-64">
+            <SLATimer ticket={ticket} />
           </div>
         </div>
 

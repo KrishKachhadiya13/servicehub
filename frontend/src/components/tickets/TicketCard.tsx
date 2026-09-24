@@ -3,18 +3,13 @@ import { Link } from 'react-router-dom';
 import type { Ticket } from '../../types/ticket';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
+import { SLATimer } from './SLATimer';
 
 interface TicketCardProps {
   ticket: Ticket;
 }
 
 export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
-  const slaStyles: Record<string, string> = {
-    SAFE: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    AT_RISK: 'text-amber-400 bg-amber-500/10 border-amber-500/20 animate-pulse',
-    BREACHED: 'text-rose-400 bg-rose-500/10 border-rose-500/20 font-bold',
-  };
-
   const formattedDate = new Date(ticket.created_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -33,9 +28,6 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           <StatusBadge status={ticket.status} size="sm" />
           <PriorityBadge priority={ticket.priority} size="sm" />
         </div>
-        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${slaStyles[ticket.sla_status]}`}>
-          SLA: {ticket.sla_status.replace('_', ' ')}
-        </span>
       </div>
 
       <h3 className="text-lg font-bold text-white group-hover:text-sky-400 transition mb-2 line-clamp-1">
@@ -46,7 +38,9 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         {ticket.description}
       </p>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-700/50 text-xs text-slate-400">
+      <SLATimer ticket={ticket} compact />
+
+      <div className="flex items-center justify-between pt-4 border-t border-slate-700/50 text-xs text-slate-400 mt-4">
         <div className="flex items-center space-x-4">
           <span>
             Dept: <strong className="text-slate-300 font-medium">{ticket.department.name}</strong>

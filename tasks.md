@@ -55,10 +55,10 @@
 - [x] Activity timeline
 
 ## Phase 6 - SLA SYSTEM
-- [ ] SLA policies
-- [ ] SLA deadline calculation
-- [ ] Dynamic SLA state (SAFE, AT_RISK, BREACHED)
-- [ ] SLA UI
+- [x] SLA policies
+- [x] SLA deadline calculation
+- [x] Dynamic SLA state (SAFE, AT_RISK, BREACHED)
+- [x] SLA UI
 
 ## Phase 7 - NOTIFICATIONS + SEARCH
 - [x] Notifications
