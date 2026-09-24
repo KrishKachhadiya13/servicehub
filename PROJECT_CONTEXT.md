@@ -1,485 +1,610 @@
-# ServiceHub Enterprise Platform — Project Context
-
-> **Last Updated:** 2026-09-24 | **Current Phase:** Phase 9 (Admin Features — in progress)
-
----
-
-## 1. Project Goal
-
-ServiceHub is a full-stack enterprise IT service desk / helpdesk platform. It allows employees to submit service request tickets, support agents to handle and resolve them, managers to oversee department-level SLA compliance, and admins to manage the entire system.
-
-**Core capabilities:**
-- Role-gated JWT authentication (Employee, Support Agent, Manager, Admin)
-- Full ticket lifecycle management with enforced state machine transitions
-- SLA policy enforcement with real-time dynamic status (SAFE / AT_RISK / BREACHED)
-- Ticket comments (with internal-only visibility for staff)
-- Ticket activity history / audit trail
-- User notifications with bell UI and read/unread state
-- Role-aware dashboards with live metrics
-- Admin panel: audit log viewer + user listing
+﻿# ServiceHub — Complete Project Context
+> **Purpose**: Paste this file into a new chat window for full project continuity.
+> **Last updated**: Phase 10 complete. Next: Phase 11 (Docker + Deployment Prep).
+> **Test status**: 23/23 backend pytest PASS.
 
 ---
 
-## 2. Current Implementation Status
+## 1. PROJECT GOAL
+
+**ServiceHub** is a polished, resume-quality full-stack **Enterprise Service & Issue Management Platform**.
+
+It demonstrates real-world skills in:
+- Full-stack web development (FastAPI + React + TypeScript)
+- JWT authentication and RBAC (Role-Based Access Control)
+- Database design with SQLAlchemy + Alembic migrations
+- SLA (Service Level Agreement) tracking with dynamic real-time state
+- Enterprise UX patterns: role-based dashboards, audit logs, in-app notifications
+
+This is NOT a toy CRUD app — it is production-quality code with proper architecture.
+
+---
+
+## 2. CURRENT IMPLEMENTATION STATUS
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 0 | Planning | ✅ Complete |
-| 1 | Project Foundation | ✅ Complete |
-| 2 | Database + Seed Data | ✅ Complete |
-| 3 | Authentication + Authorization | ✅ Complete |
-| 4 | Core Tickets | ✅ Complete |
-| 5 | Comments + History + Notifications | ✅ Complete |
-| 6 | SLA System UI | ✅ Complete |
-| 7 | Notifications + Search/Filter | ✅ Complete (implemented during Phase 4/5) |
-| 8 | Frontend Dashboards | ✅ Complete |
-| 9 | Admin Features | 🔄 In Progress |
-| 10 | Testing + Quality | ⬜ Not Started |
-| 11 | Docker + Deployment | ⬜ Not Started |
-| 12 | Final Polish | ⬜ Not Started |
+| 0  | Planning & Architecture            | COMPLETE |
+| 1  | Project Foundation                 | COMPLETE |
+| 2  | Database + Seed Data               | COMPLETE |
+| 3  | Authentication + Authorization     | COMPLETE |
+| 4  | Core Tickets                       | COMPLETE |
+| 5  | Comments + History + Notifications | COMPLETE |
+| 6  | SLA System + UI                    | COMPLETE |
+| 7  | Notifications + Search/Filter/Pagination | COMPLETE |
+| 8  | Frontend Dashboards (per role)     | COMPLETE |
+| 9  | Admin Features                     | COMPLETE |
+| 10 | Testing + Quality                  | COMPLETE |
+| 11 | Docker + Deployment Preparation    | **NEXT** |
+| 12 | Final Polish + README + Docs       | Pending |
 
 ---
 
-## 3. Architecture Overview
-
-```
-Enterprice_project/
-├── backend/                    # FastAPI Python backend
-│   ├── app/
-│   │   ├── main.py             # FastAPI app + CORS middleware
-│   │   ├── config.py           # Pydantic settings (reads .env)
-│   │   ├── database.py         # SQLAlchemy engine + SessionLocal
-│   │   ├── seed.py             # Database seed script (roles, depts, users, tickets)
-│   │   ├── api/
-│   │   │   └── v1/
-│   │   │       ├── router.py         # Central API router (mounts all sub-routers)
-│   │   │       ├── health.py         # GET /health
-│   │   │       ├── auth.py           # POST /auth/register, /login, /login/json, GET /auth/me
-│   │   │       ├── users.py          # GET /users, GET /users/{id}
-│   │   │       ├── tickets.py        # Full CRUD + /status, /assign, /priority, /comments, /history
-│   │   │       ├── departments.py    # GET /departments
-│   │   │       ├── categories.py     # GET /categories
-│   │   │       ├── notifications.py  # GET /notifications, PATCH /{id}/read, PATCH /read-all
-│   │   │       └── audit.py          # GET /audit (Admin only)
-│   │   ├── core/
-│   │   │   ├── security.py           # JWT encode/decode, password hashing (bcrypt)
-│   │   │   ├── dependencies.py       # get_current_active_user, RoleChecker
-│   │   │   └── ticket_rules.py       # State machine, SLA compute, dynamic SLA calc
-│   │   ├── models/
-│   │   │   ├── __init__.py           # Exports all models
-│   │   │   ├── enums.py              # UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, SLAStatusEnum
-│   │   │   ├── user.py               # User model
-│   │   │   ├── role.py               # Role model
-│   │   │   ├── department.py         # Department model
-│   │   │   ├── category.py           # Category model
-│   │   │   ├── ticket.py             # Ticket model
-│   │   │   ├── comment.py            # Comment model (is_internal flag)
-│   │   │   ├── history.py            # TicketHistory model
-│   │   │   ├── notification.py       # Notification model
-│   │   │   ├── sla.py                # SLAPolicy model
-│   │   │   └── audit.py              # AuditLog model
-│   │   └── schemas/
-│   │       ├── __init__.py           # Exports all Pydantic schemas
-│   │       ├── user.py               # UserCreate, UserResponse, etc.
-│   │       ├── auth.py               # LoginRequest, Token, TokenData
-│   │       ├── category.py           # CategoryOut
-│   │       ├── ticket.py             # TicketCreate, TicketResponse, TicketPaginationResponse
-│   │       ├── comment.py            # CommentCreate, CommentResponse
-│   │       ├── history.py            # TicketHistoryResponse
-│   │       ├── notification.py       # NotificationResponse
-│   │       └── audit.py              # AuditLogResponse
-│   └── requirements.txt
-├── frontend/                   # React + TypeScript + Vite frontend
-│   ├── src/
-│   │   ├── App.tsx             # Root router (React Router v6)
-│   │   ├── main.tsx            # Vite entry point
-│   │   ├── api/
-│   │   │   ├── client.ts       # Axios instance (baseURL, Bearer token interceptor)
-│   │   │   ├── tickets.ts      # fetchTicketsApi, createTicketApi, updateStatus, assign, comments, history
-│   │   │   ├── notifications.ts# getNotificationsApi, markNotificationReadApi, markAllReadApi
-│   │   │   └── audit.ts        # getAuditLogsApi
-│   │   ├── components/
-│   │   │   ├── common/
-│   │   │   │   ├── StatusBadge.tsx     # Colored badge for ticket status
-│   │   │   │   └── PriorityBadge.tsx   # Colored badge for ticket priority
-│   │   │   ├── layout/
-│   │   │   │   └── ProtectedLayout.tsx # Route guard + header + notification bell
-│   │   │   └── tickets/
-│   │   │       ├── TicketCard.tsx       # Card for ticket list (with compact SLATimer)
-│   │   │       ├── TicketFormModal.tsx  # Create ticket modal
-│   │   │       └── SLATimer.tsx         # Real-time SLA countdown + progress bar
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx  # AuthProvider, login/logout, persisted JWT
-│   │   ├── hooks/
-│   │   │   └── useAuth.ts       # Hook for consuming AuthContext
-│   │   ├── pages/
-│   │   │   ├── DashboardPage.tsx        # Role-aware dashboard with metrics + recent tickets table
-│   │   │   ├── auth/
-│   │   │   │   ├── LoginPage.tsx        # Enterprise login + quick-fill role credentials
-│   │   │   │   └── RegisterPage.tsx     # User registration form
-│   │   │   ├── tickets/
-│   │   │   │   ├── TicketListPage.tsx   # Paginated ticket list with search/filter
-│   │   │   │   └── TicketDetailPage.tsx # Ticket detail + comments + activity timeline
-│   │   │   └── admin/
-│   │   │       └── AdminPage.tsx        # Admin panel: tabbed audit logs + user listing
-│   │   └── types/
-│   │       ├── auth.ts           # User, UserRole, Department interfaces
-│   │       ├── ticket.ts         # Ticket, TicketPriority, TicketStatus, SLAStatus
-│   │       ├── comment.ts        # Comment interface
-│   │       ├── notification.ts   # Notification interface
-│   │       └── audit.ts          # AuditLog interface
-│   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml          # postgres + backend + frontend services
-├── .env                        # Local secrets (NOT committed)
-├── .env.example                # Template for env vars (safe to commit)
-├── tasks.md                    # Phase-by-phase task checklist
-├── DEVELOPMENT_STATUS.md       # One-liner current status snapshot
-└── PROJECT_CONTEXT.md          # This file
-```
-
----
-
-## 4. Technology Stack
+## 3. TECHNOLOGIES & VERSIONS
 
 ### Backend
-| Tech | Version / Notes |
-|------|----------------|
-| Python | 3.11+ |
-| FastAPI | Latest |
-| SQLAlchemy | 2.x (mapped_column style) |
-| Alembic | Database migrations |
-| PostgreSQL | 15 (via Docker or local) |
-| Pydantic v2 | Settings + request/response schemas |
-| pydantic-settings | For `.env` loading |
-| python-jose | JWT encode/decode |
-| passlib + bcrypt | Password hashing |
-| uvicorn | ASGI server |
+| Technology | Version/Notes |
+|---|---|
+| Python | 3.10+ |
+| FastAPI | >=0.110.0 |
+| Uvicorn | >=0.28.0 (standard extras) |
+| SQLAlchemy | >=2.0.28 (Mapped/mapped_column ORM style) |
+| Alembic | >=1.13.0 |
+| Pydantic v2 | >=2.6.0 |
+| pydantic-settings | >=2.2.0 |
+| email-validator | >=2.1.0 |
+| python-jose[cryptography] | >=3.3.0 (JWT) |
+| passlib[bcrypt] | >=1.7.4 |
+| python-multipart | >=0.0.9 (OAuth2 form) |
+| psycopg2-binary | >=2.9.9 (PostgreSQL driver) |
+| pytest | >=8.0.0 |
+| httpx | >=0.27.0 (test client) |
 
 ### Frontend
-| Tech | Version / Notes |
-|------|----------------|
-| React | 18+ |
-| TypeScript | 5+ |
-| Vite | Build tool |
-| React Router | v6 (declarative routing) |
-| Axios | HTTP client with interceptor |
-| Tailwind CSS | Utility-first styling |
-| lucide-react | Icon library (Bell, etc.) |
+| Technology | Version/Notes |
+|---|---|
+| React | ^19.2.8 |
+| TypeScript | ~6.0.2 |
+| Vite | ^8.3.0 |
+| React Router | ^7.18.4 |
+| Axios | ^1.20.0 |
+| Tailwind CSS | ^4.3.3 (uses @tailwindcss/postcss — NOT v3 syntax) |
+| lucide-react | ^1.47.0 |
+| recharts | ^3.10.1 |
+| clsx | ^2.1.1 |
+| tailwind-merge | ^3.7.0 |
+| oxlint | ^1.81.0 (linter) |
+
+### Infrastructure
+| Technology | Notes |
+|---|---|
+| PostgreSQL 15 | Via Docker in production |
+| SQLite | Used locally in dev (auto-configured via DATABASE_URL in .env) |
+| Docker + Docker Compose | Full-stack orchestration |
 
 ---
 
-## 5. Database Schema
+## 4. ARCHITECTURE
 
-### Tables
+**Pattern**: Modular Monolith — React SPA (frontend) + FastAPI REST API (backend) + PostgreSQL DB
 
-**`roles`** — `id`, `name` (EMPLOYEE/SUPPORT_AGENT/MANAGER/ADMIN), `description`
-
-**`departments`** — `id`, `name`, `description`
-
-**`categories`** — `id`, `name`, `description`, `department_id FK`
-
-**`users`** — `id`, `email (unique)`, `hashed_password`, `full_name`, `is_active`, `created_at`, `role_id FK`, `department_id FK (nullable)`
-
-**`sla_policies`** — `id`, `priority (unique enum)`, `resolution_time_hours`, `description`
-
-**`tickets`** — `id`, `title`, `description`, `creator_id FK`, `assigned_agent_id FK (nullable)`, `department_id FK`, `category_id FK`, `priority (enum)`, `status (enum)`, `sla_deadline`, `created_at`, `updated_at`, `resolved_at (nullable)`, `closed_at (nullable)`
-
-**`comments`** — `id`, `ticket_id FK CASCADE`, `author_id FK`, `content`, `is_internal (bool)`, `created_at`
-
-**`ticket_history`** — `id`, `ticket_id FK CASCADE`, `actor_id FK`, `action`, `old_value`, `new_value`, `timestamp`
-
-**`notifications`** — `id`, `user_id FK`, `title`, `message`, `ticket_id FK (nullable)`, `is_read (bool)`, `created_at`
-
-**`audit_logs`** — `id`, `actor_id FK (nullable)`, `action`, `entity`, `entity_id`, `details`, `ip_address`, `timestamp`
-
-### Enums
-- `UserRoleEnum`: EMPLOYEE, SUPPORT_AGENT, MANAGER, ADMIN
-- `TicketStatusEnum`: OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, CLOSED, REOPENED
-- `TicketPriorityEnum`: LOW, MEDIUM, HIGH, CRITICAL
-- `SLAStatusEnum`: SAFE, AT_RISK, BREACHED (computed, not stored)
-
----
-
-## 6. SLA Policy (Seeded defaults)
-| Priority | Resolution Hours |
-|----------|-----------------|
-| LOW | 72h |
-| MEDIUM | 48h |
-| HIGH | 24h |
-| CRITICAL | 4h |
-
-SLA state is computed dynamically on every ticket fetch via `calculate_dynamic_sla()`:
-- **BREACHED** → deadline passed (or resolved/closed after deadline)
-- **AT_RISK** → less than 25% of total allocated time remaining
-- **SAFE** → more than 25% remaining
-
----
-
-## 7. Ticket State Machine
+### Folder Structure (complete)
 
 ```
-OPEN → ASSIGNED, IN_PROGRESS, CLOSED
-ASSIGNED → IN_PROGRESS, RESOLVED, CLOSED
-IN_PROGRESS → RESOLVED, ASSIGNED, CLOSED
-RESOLVED → CLOSED, REOPENED
-CLOSED → REOPENED
-REOPENED → IN_PROGRESS, ASSIGNED, RESOLVED, CLOSED
+d:\Collage_STuffs\Other_things\Enterprice_project\
+├── .env                        # Active env vars (SQLite dev mode)
+├── .env.example                # Template without secrets
+├── .gitignore
+├── docker-compose.yml          # PostgreSQL + backend + frontend services
+├── tasks.md                    # Phase-by-phase checklist
+├── DEVELOPMENT_STATUS.md       # Current phase and known issues
+├── PROJECT_CONTEXT.md          # This file
+├── README.md
+│
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── alembic.ini
+│   ├── pytest.ini
+│   ├── servicehub.db           # SQLite dev DB (auto-created by seed)
+│   ├── alembic/                # DB migration scripts
+│   ├── tests/
+│   │   ├── conftest.py         # Shared test setup: SQLite test DB, seed, TestClient
+│   │   ├── test_auth.py        # Auth endpoint tests
+│   │   ├── test_tickets.py     # Ticket CRUD + state machine + SLA tests
+│   │   ├── test_comments_history.py  # Comment + history endpoint tests
+│   │   ├── test_admin.py       # Admin endpoints (dept, categories, SLA) tests
+│   │   ├── test_database.py    # Model/DB integrity tests
+│   │   └── test_health.py      # Health check test
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py             # FastAPI app instance + CORS middleware
+│       ├── config.py           # Pydantic Settings (reads .env file)
+│       ├── database.py         # SQLAlchemy engine, SessionLocal, Base, get_db()
+│       ├── seed.py             # Seeds roles, depts, SLA, categories, demo users, sample tickets
+│       ├── api/
+│       │   └── v1/
+│       │       ├── __init__.py
+│       │       ├── router.py           # Central APIRouter combining all sub-routers
+│       │       ├── health.py           # GET /health
+│       │       ├── auth.py             # POST /auth/register, /login, /login/json, GET /auth/me
+│       │       ├── tickets.py          # Full CRUD + /status, /assign, /priority, /comments, /history
+│       │       ├── users.py            # GET /users, GET /users/{id} (Admin+Manager only)
+│       │       ├── departments.py      # GET/POST /departments, PUT /departments/{id}
+│       │       ├── categories.py       # GET/POST /categories, PUT /categories/{id}
+│       │       ├── notifications.py    # GET /notifications, PATCH /notifications/{id}/read, PATCH /notifications/read-all
+│       │       ├── audit.py            # GET /audit (Admin only, last 50 logs)
+│       │       └── sla.py              # GET /sla, PUT /sla/{id} (Admin only)
+│       ├── core/
+│       │   ├── dependencies.py     # get_current_user, get_current_active_user, RoleChecker class
+│       │   ├── security.py         # verify_password, get_password_hash, create_access_token
+│       │   └── ticket_rules.py     # validate_status_transition, compute_sla_deadline, calculate_dynamic_sla
+│       ├── models/
+│       │   ├── __init__.py         # Re-exports all models and enums
+│       │   ├── enums.py            # UserRoleEnum, TicketStatusEnum, TicketPriorityEnum, SLAStatusEnum
+│       │   ├── role.py             # Role model
+│       │   ├── department.py       # Department model
+│       │   ├── user.py             # User model
+│       │   ├── category.py         # Category model
+│       │   ├── sla.py              # SLAPolicy model
+│       │   ├── ticket.py           # Ticket model
+│       │   ├── comment.py          # Comment model (with is_internal flag)
+│       │   ├── history.py          # TicketHistory model
+│       │   ├── notification.py     # Notification model
+│       │   └── audit.py            # AuditLog model
+│       └── schemas/
+│           ├── __init__.py         # Exports all schemas
+│           ├── auth.py             # Token, LoginRequest, TokenData
+│           ├── user.py             # UserCreate, UserUpdate, UserResponse, RoleOut, DepartmentCreate, DepartmentOut
+│           ├── category.py         # CategoryBase, CategoryCreate, CategoryOut
+│           ├── ticket.py           # TicketCreate, TicketStatusUpdate, TicketAssign, TicketPriorityUpdate, TicketResponse, TicketPaginationResponse
+│           ├── comment.py          # CommentCreate, CommentResponse
+│           ├── history.py          # TicketHistoryResponse
+│           ├── notification.py     # NotificationResponse
+│           ├── audit.py            # AuditLogResponse
+│           └── sla.py              # SLAPolicyBase, SLAPolicyUpdate, SLAPolicyOut
+│
+└── frontend/
+    ├── Dockerfile
+    ├── package.json
+    ├── vite.config.ts          # Dev proxy: /api -> http://localhost:8000
+    ├── tailwind.config.js
+    ├── postcss.config.js       # Uses @tailwindcss/postcss (Tailwind v4)
+    ├── tsconfig.json, tsconfig.app.json, tsconfig.node.json
+    ├── index.html
+    └── src/
+        ├── main.tsx
+        ├── App.tsx             # Routes: login, register, dashboard, tickets, tickets/:id, admin
+        ├── index.css           # Tailwind directives
+        ├── App.css
+        ├── api/
+        │   ├── client.ts       # Axios instance, Bearer token interceptor, auto-redirect on 401
+        │   ├── auth.ts         # loginApi, registerApi, getMeApi
+        │   ├── tickets.ts      # fetchTicketsApi, getTicketApi, createTicketApi, updateStatus, assign, priority, comments, history, depts, categories
+        │   ├── notifications.ts # getNotificationsApi, markNotificationReadApi, markAllNotificationsReadApi
+        │   └── admin.ts        # dept CRUD, category CRUD, SLA get/update, audit logs fetch
+        ├── context/
+        │   └── AuthContext.tsx  # React context: user, token, login(), logout(), isAuthenticated
+        ├── hooks/
+        │   └── useAuth.ts       # useContext(AuthContext) convenience hook
+        ├── types/
+        │   ├── auth.ts          # User, Department interfaces
+        │   ├── ticket.ts        # Ticket, TicketCreatePayload, TicketPagination, Category, TicketPriority, TicketStatus, SLAStatus
+        │   ├── comment.ts       # Comment, CommentCreate, TicketHistory
+        │   ├── notification.ts  # Notification
+        │   └── audit.ts         # AuditLog
+        ├── components/
+        │   ├── layout/
+        │   │   └── ProtectedLayout.tsx  # Route guard (redirects to /login), sidebar nav with notification bell
+        │   ├── common/
+        │   │   ├── StatusBadge.tsx      # Color-coded ticket status badge
+        │   │   └── PriorityBadge.tsx    # Color-coded priority badge
+        │   └── tickets/
+        │       ├── SLATimer.tsx         # Live countdown timer with SAFE/AT_RISK/BREACHED styling
+        │       ├── TicketCard.tsx        # Ticket summary card for list view
+        │       └── TicketFormModal.tsx   # Create ticket modal form
+        └── pages/
+            ├── DashboardPage.tsx            # Role-aware dashboard with stats and charts (recharts)
+            ├── auth/
+            │   ├── LoginPage.tsx            # Login form with quick-fill role credential buttons
+            │   └── RegisterPage.tsx         # Self-registration form (creates EMPLOYEE)
+            ├── tickets/
+            │   ├── TicketListPage.tsx       # Paginated ticket list with search, filters, sidebar
+            │   └── TicketDetailPage.tsx     # Full ticket detail: info, SLA timer, comments, history timeline
+            └── admin/
+                ├── AdminPage.tsx            # Tabbed admin panel (users, departments, categories, SLA, audit)
+                ├── DepartmentsTab.tsx       # Create/edit departments
+                ├── CategoriesTab.tsx        # Create/edit categories
+                └── SlaTab.tsx              # Edit SLA policy hours per priority
 ```
-
-State transitions enforced server-side in `ticket_rules.py::validate_status_transition()`.
-Returns HTTP 422 for invalid transitions.
 
 ---
 
-## 8. RBAC — Role-Based Access Control
+## 5. DATABASE SCHEMA (all 10 tables)
+
+### `roles`
+- `id` PK, `name` (UserRoleEnum unique), `description`
+
+### `departments`
+- `id` PK, `name` (unique), `description`, `created_at`
+
+### `users`
+- `id` PK, `email` (unique), `hashed_password`, `full_name`, `is_active`, `created_at`
+- FK: `role_id → roles.id`, `department_id → departments.id` (nullable)
+
+### `categories`
+- `id` PK, `name` (unique), `description`
+- FK: `department_id → departments.id` (nullable)
+
+### `sla_policies`
+- `id` PK, `priority` (TicketPriorityEnum unique), `resolution_time_hours`, `description`
+- Default values: CRITICAL=4h, HIGH=8h, MEDIUM=24h, LOW=72h
+
+### `tickets`
+- `id` PK, `title` (varchar 255), `description` (text)
+- FK: `creator_id → users.id`, `assigned_agent_id → users.id` (nullable)
+- FK: `department_id → departments.id`, `category_id → categories.id`
+- `priority` enum (LOW/MEDIUM/HIGH/CRITICAL), `status` enum (OPEN/ASSIGNED/IN_PROGRESS/RESOLVED/CLOSED/REOPENED)
+- `sla_deadline` (datetime), `created_at`, `updated_at`, `resolved_at` (nullable), `closed_at` (nullable)
+
+### `comments`
+- `id` PK, `ticket_id` FK (CASCADE), `author_id` FK, `content` (text), `is_internal` (bool, default false), `created_at`
+
+### `ticket_history`
+- `id` PK, `ticket_id` FK (CASCADE), `actor_id` FK, `action` (string, e.g. "STATUS_CHANGED"), `old_value`, `new_value`, `timestamp`
+
+### `notifications`
+- `id` PK, `user_id` FK, `title`, `message`, `ticket_id` FK (nullable, CASCADE), `is_read` (bool), `created_at`
+
+### `audit_logs`
+- `id` PK, `actor_id` FK (nullable), `action`, `entity`, `entity_id`, `details`, `ip_address`, `timestamp`
+
+---
+
+## 6. COMPLETE API REFERENCE
+
+Base URL: `/api/v1`  
+Auth: Bearer JWT token in `Authorization` header (except public routes)
+
+### Health
+```
+GET  /health                     Public. Returns app name, version, status, timestamp
+```
+
+### Auth (`/auth`)
+```
+POST /auth/register              Public. Body: {email, full_name, password, department_id?}. Creates EMPLOYEE user.
+POST /auth/login                 Public. OAuth2 form (username/password). Returns Token.
+POST /auth/login/json            Public. JSON body {email, password}. Returns Token + user object.
+GET  /auth/me                    Bearer. Returns current user profile.
+```
+
+### Tickets (`/tickets`)
+```
+POST   /tickets                  Bearer (all roles). Create ticket. Body: TicketCreate.
+GET    /tickets                  Bearer. List with role-scoped visibility.
+                                   Query params: page, size, status, priority, department_id, category_id, search
+GET    /tickets/{id}             Bearer. Get full ticket detail.
+PATCH  /tickets/{id}/status      Bearer. Update status (state machine enforced). Body: {status}.
+PATCH  /tickets/{id}/assign      Agent/Manager/Admin. Assign agent. Body: {assigned_agent_id}.
+PATCH  /tickets/{id}/priority    Agent/Manager/Admin. Change priority + recalculate SLA. Body: {priority}.
+POST   /tickets/{id}/comments    Bearer. Add comment. Body: {content, is_internal?}. Employee cannot post internal.
+GET    /tickets/{id}/comments    Bearer. List comments. Employee cannot see internal comments.
+GET    /tickets/{id}/history     Bearer. List history events ASC. Employee only sees own tickets.
+```
+
+### Users (`/users`)
+```
+GET  /users                      Admin + Manager. List all users.
+GET  /users/{id}                 Admin + Manager. Get user by ID.
+```
+
+### Departments (`/departments`)
+```
+GET  /departments                Public. List all departments.
+POST /departments                Admin only. Create department.
+PUT  /departments/{id}           Admin only. Update department.
+```
+
+### Categories (`/categories`)
+```
+GET  /categories                 Public. List categories. Optional ?department_id= filter.
+POST /categories                 Admin only. Create category.
+PUT  /categories/{id}            Admin only. Update category.
+```
+
+### Notifications (`/notifications`)
+```
+GET    /notifications            Bearer. Get current user's notifications, newest first.
+PATCH  /notifications/{id}/read  Bearer. Mark single notification as read.
+PATCH  /notifications/read-all   Bearer. Mark all user's notifications as read.
+```
+
+### SLA (`/sla`)
+```
+GET  /sla                        Public. List all 4 SLA policies.
+PUT  /sla/{id}                   Admin only. Update SLA hours/description.
+```
+
+### Audit (`/audit`)
+```
+GET  /audit                      Admin only. Get last 50 audit log entries, newest first.
+```
+
+---
+
+## 7. RBAC — ROLE-BASED ACCESS CONTROL
 
 | Action | EMPLOYEE | SUPPORT_AGENT | MANAGER | ADMIN |
 |--------|----------|---------------|---------|-------|
-| Create ticket | ✅ (own) | ✅ | ✅ | ✅ |
-| View tickets | Own only | Assigned + dept | Dept only | All |
-| Update status | REOPEN own only | ✅ | ✅ | ✅ |
-| Assign ticket | ❌ | ✅ | ✅ | ✅ |
-| Change priority | ❌ | ✅ | ✅ | ✅ |
-| Add internal comment | ❌ | ✅ | ✅ | ✅ |
-| View internal comments | ❌ | ✅ | ✅ | ✅ |
-| View all users | ❌ | ❌ | ✅ | ✅ |
-| View audit logs | ❌ | ❌ | ❌ | ✅ |
+| Create ticket | YES | YES | YES | YES |
+| View OWN tickets only | YES | — | — | — |
+| View dept tickets | — | YES | YES | YES |
+| View ALL tickets | — | — | — | YES |
+| Update ticket status | REOPEN only | YES | YES | YES |
+| Assign ticket | NO | self-only | YES | YES |
+| Change priority | NO | YES | YES | YES |
+| Post internal comment | NO | YES | YES | YES |
+| See internal comments | NO | YES | YES | YES |
+| List all users | NO | NO | YES | YES |
+| Create/edit depts/cats | NO | NO | NO | YES |
+| Update SLA policies | NO | NO | NO | YES |
+| View audit logs | NO | NO | NO | YES |
 
 ---
 
-## 9. API Endpoints
+## 8. TICKET STATE MACHINE (enforced in backend)
 
-All routes under `/api/v1/`
+```
+OPEN        → ASSIGNED, IN_PROGRESS, CLOSED
+ASSIGNED    → IN_PROGRESS, RESOLVED, CLOSED
+IN_PROGRESS → RESOLVED, ASSIGNED, CLOSED
+RESOLVED    → CLOSED, REOPENED
+CLOSED      → REOPENED
+REOPENED    → IN_PROGRESS, ASSIGNED, RESOLVED, CLOSED
+```
 
-### Auth
-- `POST /auth/register` — Create new user account
-- `POST /auth/login` — OAuth2 form-based login → JWT token
-- `POST /auth/login/json` — JSON body login → JWT token
-- `GET /auth/me` — Get current authenticated user
-
-### Users
-- `GET /users` — List all users (Admin + Manager)
-- `GET /users/{id}` — Get user by ID (Admin + Manager)
-
-### Tickets
-- `POST /tickets` — Create ticket (all roles)
-- `GET /tickets` — List tickets (role-scoped, supports `?search=`, `?status=`, `?priority=`, `?department_id=`, `?category_id=`, `?page=`, `?size=`)
-- `GET /tickets/{id}` — Get ticket detail
-- `PATCH /tickets/{id}/status` — Update status (enforces state machine)
-- `PATCH /tickets/{id}/assign` — Assign agent
-- `PATCH /tickets/{id}/priority` — Update priority
-- `POST /tickets/{id}/comments` — Add comment (`is_internal` flag)
-- `GET /tickets/{id}/comments` — Get comments (internal hidden from EMPLOYEE)
-- `GET /tickets/{id}/history` — Get activity timeline
-
-### Departments & Categories
-- `GET /departments` — List all departments
-- `GET /categories` — List all categories
-
-### Notifications
-- `GET /notifications` — Get current user's notifications
-- `PATCH /notifications/{id}/read` — Mark one as read
-- `PATCH /notifications/read-all` — Mark all as read
-
-### Audit
-- `GET /audit?limit=50` — Get system audit logs (Admin only)
-
-### Health
-- `GET /health` — Health check
-
-**Docs available at:** `http://localhost:8000/api/v1/docs`
+Implementation: `backend/app/core/ticket_rules.py` → `validate_status_transition()`
 
 ---
 
-## 10. Environment Variables
+## 9. SLA SYSTEM
 
-Copy `.env.example` to `.env` and fill in values. Do NOT commit `.env`.
+- SLA deadline = `created_at + resolution_time_hours` from `sla_policies` by priority
+- Fallback if no policy found: 48 hours
+- Dynamic SLA status computed on EVERY ticket fetch (not stored in DB):
+  - `SAFE`: > 25% of total SLA window remaining
+  - `AT_RISK`: ≤ 25% of total SLA window remaining
+  - `BREACHED`: deadline has passed
+- For RESOLVED/CLOSED tickets: compares `resolved_at`/`closed_at` vs `sla_deadline`
+- When priority changes: recalculates `sla_deadline` from original `created_at`
+- Frontend: `SLATimer.tsx` component shows a live countdown with colored badge
 
-```env
-PROJECT_NAME="ServiceHub Enterprise Platform"
-VERSION="1.0.0"
-ENVIRONMENT="development"
+---
 
+## 10. ENVIRONMENT VARIABLES
+
+File: `.env` in project root (loaded by backend via pydantic-settings)
+
+```
+PROJECT_NAME=ServiceHub Enterprise Platform
+VERSION=1.0.0
+ENVIRONMENT=development
 POSTGRES_SERVER=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=<your_password>
+POSTGRES_PASSWORD=postgres
 POSTGRES_DB=servicehub
-DATABASE_URL=postgresql://postgres:<your_password>@localhost:5432/servicehub
-
-SECRET_KEY=<random_secure_string_min_32_chars>
+DATABASE_URL=sqlite:///./servicehub.db    # SQLite for local dev
+SECRET_KEY=DEV_SECRET_KEY_CHANGE_IN_PRODUCTION_SERVICEHUB_2026
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
 
-CORS origins are hardcoded in `config.py` to: `http://localhost:3000`, `http://localhost:5173`, `http://127.0.0.1:3000`
+> NOTE: Docker Compose overrides DATABASE_URL with the PostgreSQL connection string.
+> The backend handles both SQLite and PostgreSQL transparently via SQLAlchemy.
 
 ---
 
-## 11. Commands to Run the Project
+## 11. FRONTEND AUTH FLOW
 
-### Option A — Local Development (recommended)
+1. User submits login → `POST /api/v1/auth/login/json`
+2. JWT stored in `localStorage` as `servicehub_token`
+3. User object stored as `servicehub_user`
+4. `AuthContext` provides `{ user, token, login(), logout(), isAuthenticated }`
+5. `useAuth()` hook wraps the context
+6. `ProtectedLayout` checks `isAuthenticated` → redirects to `/login` if false
+7. `client.ts` Axios interceptor attaches `Authorization: Bearer <token>` to every request
+8. On 401 response → clears localStorage + forces `window.location.href = '/login'` (bug fix applied in Phase 10)
 
-**Backend:**
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate          # Windows
+---
+
+## 12. FRONTEND ROUTING
+
+```
+/login          → LoginPage (public)
+/register       → RegisterPage (public)
+/dashboard      → DashboardPage (protected, role-aware stats)
+/tickets        → TicketListPage (protected, paginated with filters)
+/tickets/:id    → TicketDetailPage (protected, comments + history)
+/admin          → AdminPage (protected, Admin-only tabbed panel)
+*               → redirect to /tickets
+```
+
+---
+
+## 13. SEED DATA
+
+Run with: `python app/seed.py` from `backend/`
+
+Creates:
+- **Roles**: EMPLOYEE, SUPPORT_AGENT, MANAGER, ADMIN
+- **Departments**: IT Support, Human Resources, Finance, Operations, Customer Support
+- **SLA Policies**: CRITICAL=4h, HIGH=8h, MEDIUM=24h, LOW=72h
+- **~15 Categories** linked to departments
+- **Demo users** (password: `password123` for all):
+  - `admin@servicehub.com` — ADMIN
+  - `manager@servicehub.com` — MANAGER (IT Support)
+  - `agent1@servicehub.com` — SUPPORT_AGENT (IT Support)
+  - `agent2@servicehub.com` — SUPPORT_AGENT (Human Resources)
+  - `emp1@servicehub.com` — EMPLOYEE (IT Support)
+  - `emp2@servicehub.com` — EMPLOYEE (Finance)
+- **~10 sample tickets** in various statuses with history entries
+
+---
+
+## 14. HOW TO RUN
+
+### Local Development (SQLite — no Docker needed)
+
+```powershell
+# Terminal 1 — Backend
+cd d:\Collage_STuffs\Other_things\Enterprice_project\backend
 pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+python app/seed.py         # first time only — creates servicehub.db
+uvicorn app.main:app --reload --port 8000
 
-**Seed the database (first run only):**
-```bash
-cd backend
-python -m app.seed
-```
-
-**Frontend:**
-```bash
-cd frontend
+# Terminal 2 — Frontend
+cd d:\Collage_STuffs\Other_things\Enterprice_project\frontend
 npm install
-npm run dev                    # runs on http://localhost:5173
+npm run dev                # http://localhost:3000
 ```
 
-### Option B — Docker Compose
+API docs: `http://localhost:8000/api/v1/docs`
 
-```bash
-docker-compose up --build
-```
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:3000`
-- PostgreSQL: `localhost:5432`
-
-### Run backend tests:
-```bash
-cd backend
-pytest
+### Run Backend Tests (all 23 should pass)
+```powershell
+cd d:\Collage_STuffs\Other_things\Enterprice_project\backend
+pytest -v
 ```
 
----
-
-## 12. Seed Data (Demo Accounts)
-
-The seed script (`app/seed.py`) creates these demo accounts:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@servicehub.com | Admin@123 |
-| Manager | manager@servicehub.com | Manager@123 |
-| Support Agent | agent@servicehub.com | Agent@123 |
-| Employee | employee@servicehub.com | Employee@123 |
-
-Seed also creates: 3 departments, 4 SLA policies, categories, and sample tickets with history.
+### Docker (PostgreSQL)
+```powershell
+cd d:\Collage_STuffs\Other_things\Enterprice_project
+docker compose up --build
+```
 
 ---
 
-## 13. Key Implementation Decisions
+## 15. TEST COVERAGE SUMMARY (Phase 10)
 
-1. **JWT stored in localStorage** via `AuthContext`. Token is attached to every request via Axios request interceptor. Token expiry is 24 hours.
-2. **SLA status is NOT stored in DB** — it is computed on every ticket read via `calculate_dynamic_sla()` in `ticket_rules.py`. This avoids stale data and background job dependencies.
-3. **State machine enforced server-side** — `validate_status_transition()` raises HTTP 422 for invalid transitions. Frontend does not need to replicate this logic.
-4. **EMPLOYEE visibility scoping** — Employees can only see their own tickets. This is enforced at both list and detail endpoints. Internal comments are filtered out server-side.
-5. **History logged automatically** — Every status change, priority change, and assignment is written to `ticket_history` table automatically in the API handler, not by the caller.
-6. **AuditLog written on every mutation** — Ticket creation, status changes, assignments, priority changes all write an AuditLog entry.
-7. **Tailwind CSS** used for all styling. Dark slate-based color palette. All pages mobile-responsive.
-8. **`lucide-react`** used for icons throughout the frontend.
-9. **Pydantic v2** used. `model_config = ConfigDict(from_attributes=True)` is used on all ORM-backed schemas.
-10. **SQLAlchemy 2.x `Mapped[]` style** used for all models.
+**23 tests / 23 passing**
 
----
+| File | Tests | What is tested |
+|------|-------|---------------|
+| test_health.py | 1 | Health endpoint |
+| test_auth.py | ~6 | Register, login (form + JSON), /me, duplicate email, bad password |
+| test_tickets.py | ~8 | Create, list, get, status transitions, state machine rejection, SLA calc |
+| test_comments_history.py | ~5 | Add comment, list comments, internal comment RBAC, history endpoint |
+| test_admin.py | ~3 | Dept/category/SLA admin endpoints |
 
-## 14. Frontend Architecture Decisions
-
-- **`AuthContext`** wraps the entire app and holds `user`, `isAuthenticated`, `isLoading`, `login()`, `logout()`.
-- **`ProtectedLayout`** is the route guard. It redirects unauthenticated users to `/login`, shows a 403 page for wrong roles, and renders the shared header (notification bell + user info) + `<Outlet />`.
-- **`useAuth()`** hook provides access to auth state from any component.
-- **`SLATimer`** is a self-contained component that accepts a `ticket` prop and maintains its own countdown via `setInterval`. Supports `compact` prop for card view vs. full view for detail page.
-- **`DashboardPage`** uses `Promise.all` with 5 parallel API calls to render metrics without blocking.
+**Testing setup**: All tests use a shared in-memory SQLite DB (test_shared.db) per session,
+seeded via the actual `seed_data()` function. DB is cleaned up after test session.
 
 ---
 
-## 15. Completed Tasks
+## 16. IMPORTANT ARCHITECTURAL DECISIONS
 
-- [x] Phase 0: Architecture, folder structure, planning
-- [x] Phase 1: Repo, Vite frontend, FastAPI backend, PostgreSQL, Docker Compose, health endpoint
-- [x] Phase 2: All SQLAlchemy models, Alembic migrations, seed data
-- [x] Phase 3: JWT auth, bcrypt passwords, RBAC via `RoleChecker`, frontend AuthContext, LoginPage, RegisterPage
-- [x] Phase 4: Full ticket CRUD, state machine, SLA deadline computation, role-scoped listing, search + filter + pagination
-- [x] Phase 5: Comments (with `is_internal`), ticket history timeline, notifications API, notification bell in header
-- [x] Phase 6: `SLATimer` component with live countdown + progress bar in TicketCard and TicketDetailPage
-- [x] Phase 7: Notifications fully done; search/filter done in Phase 4 backend
-- [x] Phase 8: `DashboardPage` rebuilt with role-aware title, live metrics cards, recent tickets table with SLA
-- [x] Phase 9 (partial): `AdminPage` with tabbed audit log viewer + user listing; backend `/audit` route; `AuditLogResponse` schema
-
----
-
-## 16. Unfinished / Remaining Tasks
-
-### Phase 9 — Admin Features (in progress)
-- [ ] Add nav link to `/admin` in `ProtectedLayout` sidebar/header (visible only to ADMIN)
-- [ ] Department management UI (CRUD)
-- [ ] Category management UI (CRUD)
-- [ ] SLA policy management UI (edit `resolution_time_hours` per priority)
-
-### Phase 10 — Testing + Quality
-- [ ] Expand backend unit tests beyond auth (currently 12 tests pass)
-- [ ] Add integration tests for ticket lifecycle
-- [ ] Frontend E2E tests (Playwright or Cypress)
-
-### Phase 11 — Docker + Deployment
-- [ ] Write production `Dockerfile` for backend (multi-stage)
-- [ ] Write production `Dockerfile` for frontend (nginx static)
-- [ ] Update `docker-compose.yml` to use production builds
-- [ ] Deployment documentation
-
-### Phase 12 — Final Polish
-- [ ] Navigation sidebar with links to Dashboard, Tickets, Admin
-- [ ] README.md with screenshots and setup guide
-- [ ] Architecture diagram
+1. **SQLite for local dev**: `DATABASE_URL=sqlite:///./servicehub.db` in `.env`. No PostgreSQL needed locally. Docker Compose uses real PostgreSQL.
+2. **Pydantic v2**: All schemas use `ConfigDict(from_attributes=True)` — NOT `orm_mode = True`.
+3. **Tailwind CSS v4**: Uses `@tailwindcss/postcss` in `postcss.config.js` — NOT the v3 `tailwindcss` plugin.
+4. **JWT in localStorage**: Keys are `servicehub_token` and `servicehub_user`.
+5. **SLA is computed dynamically**: Computed on every ticket read — NOT stored as a status column in the DB.
+6. **Comments have `is_internal` flag**: Employees cannot create or see internal comments.
+7. **TicketHistory is written on every change**: Status changes, assignments, priority changes all write history rows automatically.
+8. **AuditLog**: Auth events (register, login) and ticket creation all write audit log rows automatically.
+9. **Notifications**: Created automatically on ticket status changes and assignments.
+10. **State machine is enforced server-side**: Invalid transitions return HTTP 422.
+11. **Role visibility scoping is server-side**: Employees only see own tickets, agents see dept tickets, managers see their dept, admins see all.
+12. **Test isolation**: Each test suite shares one seeded SQLite DB per session — no per-test DB creation (faster).
+13. **`/notifications/read-all` route ordering**: Must be registered BEFORE `/{notification_id}/read` in the router to avoid FastAPI treating "read-all" as a notification ID.
+14. **Axios auto-redirect on 401**: The response interceptor in `client.ts` forces `window.location.href = '/login'` when token expires (bug fixed in Phase 10).
 
 ---
 
-## 17. Known Issues / Bugs
+## 17. KNOWN BUGS / ISSUES
 
-1. **No sidebar navigation** — Users navigate by manually typing URLs or clicking in-page links. A sidebar nav menu needs to be added to `ProtectedLayout`.
-2. **Notification bell does not auto-refresh** — Notifications are loaded once on mount. No polling or WebSocket real-time updates.
-3. **`/admin` route not linked in the UI** — The `AdminPage` exists at `/admin` but there's no nav link to it. Admin users must manually navigate there.
-4. **No confirmation dialog on destructive actions** — Status changes and assignments happen immediately on button click.
-5. **Token expiry not handled gracefully** — When the JWT expires, Axios requests will 401 but the user won't be automatically redirected to login without a response interceptor.
-6. **`DEVELOPMENT_STATUS.md` references Phase 7 as "implicitly done"** — This is accurate but the tasks.md still has Phase 7 search/filter/sorting/pagination items unchecked. The backend supports them; frontend pagination UI is not built.
+**None currently known.**
 
----
-
-## 18. Current Task & Exact Next Steps
-
-**Current task:** Complete Phase 9 — Admin Features
-
-**Files already created for Phase 9:**
-- `backend/app/api/v1/audit.py` — `GET /audit` endpoint (Admin only, limit param)
-- `backend/app/schemas/audit.py` — `AuditLogResponse` Pydantic schema
-- `frontend/src/types/audit.ts` — `AuditLog` TypeScript interface
-- `frontend/src/api/audit.ts` — `getAuditLogsApi()` function
-- `frontend/src/pages/admin/AdminPage.tsx` — Tabbed admin panel (Audit Logs + Users)
-- Registered `/admin` route in `App.tsx`
-- Registered `audit` router in `backend/app/api/v1/router.py`
-
-**Immediate next steps:**
-1. Add an "Admin" navigation link in `ProtectedLayout.tsx` header (visible only when `user.role.name === 'ADMIN'`)
-2. Add department management page (`/admin/departments`) with list + edit
-3. Add category management page (`/admin/categories`) with list + edit
-4. Add SLA policy management page (`/admin/sla`) to edit resolution hours per priority
+Previous bugs fixed in Phase 10:
+- Token expiry did not redirect to login → Fixed in `client.ts` response interceptor
+- Pagination state not resetting on filter change → Fixed in `TicketListPage.tsx`
+- Sidebar nav not highlighting active route → Fixed in `ProtectedLayout.tsx`
 
 ---
 
-## 19. Important Constraints & Instructions
+## 18. PHASE 11 — NEXT IMPLEMENTATION PLAN (Docker + Deployment)
 
-- **Do NOT rewrite, refactor, or redesign** anything unless the user explicitly asks. Extend and add to existing code.
-- **Always read actual source files** before modifying them — do not assume structure from memory.
-- **Update `tasks.md` and `DEVELOPMENT_STATUS.md`** at the end of each completed phase.
-- **Provide a humanized `git commit` message** at the end of each phase when requested.
-- **Keep schemas and models in sync** — when adding a new model field, update the corresponding Pydantic schema too.
-- **All new backend endpoints must use `get_current_active_user`** or `RoleChecker` — no unprotected mutation endpoints.
-- **Frontend API calls go through `src/api/client.ts`** (Axios instance with auth interceptor) — never use raw `fetch`.
-- The project was originally developed in another Antigravity account and was handed over. Always use the actual source files as the source of truth, not this document alone.
+### Tasks to complete:
+
+**STEP 1 — Production Backend Dockerfile** (`backend/Dockerfile`)
+- Multi-stage build with python:3.11-slim
+- Install only production deps (no pytest/httpx in prod image)
+- Run with: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
+- Add HEALTHCHECK instruction
+
+**STEP 2 — Production Frontend Dockerfile** (`frontend/Dockerfile`)
+- Multi-stage: node:20-alpine to build, then nginx:alpine to serve
+- Build: `npm run build` → `/app/dist`
+- Nginx config to serve SPA correctly (handle client-side routing with `try_files`)
+- Nginx proxy `/api/` to `http://backend:8000/api/`
+
+**STEP 3 — Docker Compose Production** (`docker-compose.yml`)
+- Already has postgres, backend, frontend services (basic version exists)
+- Update: add `depends_on` healthcheck conditions
+- Add: `restart: unless-stopped` for all services
+- Add: proper network definition
+- Add: volume for postgres data persistence
+
+**STEP 4 — Nginx configuration file** (`frontend/nginx.conf`)
+```nginx
+server {
+    listen 80;
+    location / {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+    }
+    location /api/ {
+        proxy_pass http://backend:8000;
+    }
+}
+```
+
+**STEP 5 — Deployment documentation** (`DEPLOYMENT.md`)
+- How to run with Docker
+- How to run locally
+- Environment variable reference
+- How to seed data in Docker
+- Health check URLs
+
+**STEP 6 — Update README.md**
+- Project overview with screenshots description
+- Tech stack badges
+- Quick start guide
+
+---
+
+## 19. PHASE 12 — FINAL POLISH (after Phase 11)
+
+- Polish UI: animations, loading spinners, empty states
+- Error boundary components
+- Responsive design review (mobile)
+- Complete README with architecture diagram
+- (Optional) Dark mode toggle
+
+---
+
+## 20. GIT COMMIT HISTORY SUMMARY
+
+- Phase 0: "chore: initialize project structure and Phase 0 planning"
+- Phase 1: "feat: bootstrap frontend (Vite+React+TS+Tailwind) and backend (FastAPI+SQLAlchemy+Alembic)"
+- Phase 2: "feat: complete database models, alembic migrations, and seed script"
+- Phase 3: "feat: JWT authentication, RBAC, AuthContext, ProtectedLayout, LoginPage, RegisterPage"
+- Phase 4: "feat: core ticket CRUD, status state machine, SLA engine, ticket UI pages"
+- Phase 5: "feat: comments, ticket history timeline, notifications API and bell UI"
+- Phase 6: "feat: SLA UI timer component, real-time countdown, AT_RISK/BREACHED badges"
+- Phase 7: "feat: notification read/unread, ticket list search, filters, pagination"
+- Phase 8: "feat: role-aware dashboards with stats and recharts charts"
+- Phase 9: "feat: admin panel with tabs for users, departments, categories, SLA, audit logs"
+- Phase 10: "test: 23 backend tests passing, fix token expiry redirect, pagination reset, sidebar nav"
+- Next: "feat: Phase 11 - production Dockerfiles, nginx config, deployment docs"

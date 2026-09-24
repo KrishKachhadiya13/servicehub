@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: servicehub_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -18,13 +18,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - servicehub_net
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: servicehub_backend
-    restart: always
+    restart: unless-stopped
     environment:
       - POSTGRES_SERVER=postgres
       - POSTGRES_PORT=5432
@@ -38,17 +40,26 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - servicehub_net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: servicehub_frontend
-    restart: always
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - servicehub_net
 
 volumes:
   postgres_data:
+
+networks:
+  servicehub_net:
+    driver: bridge
