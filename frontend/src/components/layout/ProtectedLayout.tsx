@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { Bell } from 'lucide-react';
+import { getNotificationsApi, markNotificationReadApi, markAllNotificationsReadApi } from '../../api/notifications';
+import type { Notification } from '../../types/notification';
 import { useAuth } from '../../hooks/useAuth';
 import type { UserRole } from '../../types/auth';
 
@@ -9,6 +12,43 @@ interface ProtectedLayoutProps {
 
 export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ allowedRoles }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifs, setShowNotifs] = useState(false);
+
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      loadNotifications();
+    }
+  }, [user, isAuthenticated]);
+
+  const loadNotifications = async () => {
+    try {
+      const data = await getNotificationsApi();
+      setNotifications(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMarkRead = async (id: number) => {
+    try {
+      await markNotificationReadApi(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsReadApi();
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   if (isLoading) {
     return (
@@ -63,6 +103,52 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ allowedRoles }
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifs(!showNotifs)}
+                className="relative p-2 rounded-full hover:bg-slate-700/50 transition text-slate-300 hover:text-white"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 rounded-full text-[9px] flex items-center justify-center font-bold text-white border border-slate-800">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotifs && (
+                <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-4 border-b border-slate-700/60 flex justify-between items-center">
+                    <h3 className="font-bold text-white text-sm">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button onClick={handleMarkAllRead} className="text-xs text-sky-400 hover:text-sky-300 font-semibold">
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-slate-500 text-sm">No notifications</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div 
+                          key={n.id} 
+                          onClick={() => !n.is_read && handleMarkRead(n.id)}
+                          className={`p-4 border-b border-slate-700/40 cursor-pointer hover:bg-slate-700/30 transition ${!n.is_read ? 'bg-slate-700/10' : 'opacity-60'}`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-semibold text-sm text-white">{n.title}</span>
+                            {!n.is_read && <span className="w-2 h-2 rounded-full bg-sky-500 mt-1.5"></span>}
+                          </div>
+                          <p className="text-xs text-slate-400 mb-2">{n.message}</p>
+                          <span className="text-[10px] text-slate-500">{new Date(n.created_at).toLocaleString()}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-white">{user.full_name}</p>
               <p className="text-xs text-slate-400">{user.email}</p>

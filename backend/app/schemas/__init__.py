@@ -1,5 +1,13 @@
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, RoleOut, DepartmentOut
 from app.schemas.auth import LoginRequest, Token, TokenData
+from app.schemas.category import CategoryBase, CategoryCreate, CategoryOut
+from app.schemas.ticket import (
+    TicketCreate, TicketStatusUpdate, TicketAssign, TicketPriorityUpdate,
+    TicketResponse, TicketPaginationResponse
+)
+from app.schemas.comment import CommentCreate, CommentResponse
+from app.schemas.history import TicketHistoryResponse
+from app.schemas.notification import NotificationResponse
 
 __all__ = [
     "UserCreate",
@@ -9,5 +17,18 @@ __all__ = [
     "DepartmentOut",
     "LoginRequest",
     "Token",
-    "TokenData"
+    "TokenData",
+    "CategoryBase",
+    "CategoryCreate",
+    "CategoryOut",
+    "TicketCreate",
+    "TicketStatusUpdate",
+    "TicketAssign",
+    "TicketPriorityUpdate",
+    "TicketResponse",
+    "TicketPaginationResponse",
+    "CommentCreate",
+    "CommentResponse",
+    "TicketHistoryResponse",
+    "NotificationResponse"
 ]

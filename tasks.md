@@ -39,20 +39,20 @@
 - [x] Frontend auth state
 
 ## Phase 4 - CORE TICKETS
-- [ ] Create ticket
-- [ ] List tickets
-- [ ] Ticket details
-- [ ] Update ticket
-- [ ] Assignment
-- [ ] Status transitions
-- [ ] Priority, Categories, Departments
-- [ ] Backend authorization
+- [x] Create ticket
+- [x] List tickets
+- [x] Ticket details
+- [x] Update ticket
+- [x] Assignment
+- [x] Status transitions
+- [x] Priority, Categories, Departments
+- [x] Backend authorization
 
 ## Phase 5 - COMMENTS + HISTORY + AUDIT LOGS
-- [ ] Ticket Comments
-- [ ] Ticket history
-- [ ] Audit logs
-- [ ] Activity timeline
+- [x] Ticket Comments
+- [x] Ticket history
+- [ ] Audit logs (viewer pending)
+- [x] Activity timeline
 
 ## Phase 6 - SLA SYSTEM
 - [ ] SLA policies
@@ -61,8 +61,8 @@
 - [ ] SLA UI
 
 ## Phase 7 - NOTIFICATIONS + SEARCH
-- [ ] Notifications
-- [ ] Read/unread state
+- [x] Notifications
+- [x] Read/unread state
 - [ ] Search
 - [ ] Filtering
 - [ ] Sorting

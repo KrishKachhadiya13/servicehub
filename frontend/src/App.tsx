@@ -5,6 +5,8 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ProtectedLayout } from './components/layout/ProtectedLayout';
 import { DashboardPage } from './pages/DashboardPage';
+import { TicketListPage } from './pages/tickets/TicketListPage';
+import { TicketDetailPage } from './pages/tickets/TicketDetailPage';
 
 export const App: React.FC = () => {
   return (
@@ -18,10 +20,12 @@ export const App: React.FC = () => {
           {/* Protected Routes */}
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/tickets" element={<TicketListPage />} />
+            <Route path="/tickets/:id" element={<TicketDetailPage />} />
           </Route>
 
           {/* Default Redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/tickets" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
