@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Building, Folder, ArrowRight } from 'lucide-react';
 import type { Ticket } from '../../types/ticket';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
@@ -13,44 +14,53 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const formattedDate = new Date(ticket.created_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 
   return (
     <Link
       to={`/tickets/${ticket.id}`}
-      className="block bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-600 rounded-2xl p-6 transition duration-200 shadow-lg group"
+      className="group relative flex flex-col justify-between apple-card p-5 sm:p-6 transition-all duration-200 hover:border-[#C7C7CC] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
     >
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-mono text-slate-400 font-semibold">#{ticket.id}</span>
-          <StatusBadge status={ticket.status} size="sm" />
-          <PriorityBadge priority={ticket.priority} size="sm" />
+      <div>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[#6E6E73] font-semibold bg-[#F5F5F7] px-2 py-0.5 rounded border border-[#E5E5E7]">
+              #{ticket.id}
+            </span>
+            <StatusBadge status={ticket.status} size="sm" />
+            <PriorityBadge priority={ticket.priority} size="sm" />
+          </div>
+          <span className="text-[11px] text-[#86868B]">{formattedDate}</span>
         </div>
+
+        <h3 className="text-base font-semibold text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors line-clamp-1 mb-1.5">
+          {ticket.title}
+        </h3>
+
+        <p className="text-[#6E6E73] text-xs sm:text-sm mb-4 line-clamp-2 leading-relaxed">
+          {ticket.description}
+        </p>
       </div>
 
-      <h3 className="text-lg font-bold text-white group-hover:text-sky-400 transition mb-2 line-clamp-1">
-        {ticket.title}
-      </h3>
+      <div className="space-y-3 pt-3 border-t border-[#F5F5F7]">
+        <SLATimer ticket={ticket} compact />
 
-      <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">
-        {ticket.description}
-      </p>
+        <div className="flex items-center justify-between text-xs text-[#6E6E73] pt-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 bg-[#F5F5F7] px-2 py-0.5 rounded text-[11px] text-[#1D1D1F]">
+              <Building size={11} className="text-[#86868B]" />
+              <span>{ticket.department.name}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 bg-[#F5F5F7] px-2 py-0.5 rounded text-[11px] text-[#6E6E73]">
+              <Folder size={11} className="text-[#86868B]" />
+              <span>{ticket.category.name}</span>
+            </span>
+          </div>
 
-      <SLATimer ticket={ticket} compact />
-
-      <div className="flex items-center justify-between pt-4 border-t border-slate-700/50 text-xs text-slate-400 mt-4">
-        <div className="flex items-center space-x-4">
-          <span>
-            Dept: <strong className="text-slate-300 font-medium">{ticket.department.name}</strong>
-          </span>
-          <span>
-            Category: <strong className="text-slate-300 font-medium">{ticket.category.name}</strong>
-          </span>
-        </div>
-        <div>
-          <span>Created by <strong className="text-slate-300 font-medium">{ticket.creator.full_name}</strong> &bull; {formattedDate}</span>
+          <div className="flex items-center gap-1 text-[#0071E3] text-xs font-medium pl-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span>View</span>
+            <ArrowRight size={12} />
+          </div>
         </div>
       </div>
     </Link>

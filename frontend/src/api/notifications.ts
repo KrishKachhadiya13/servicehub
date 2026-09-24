@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { Notification } from '../types/notification';
+import type { Notification } from '../types/notification';
 
 export const getNotificationsApi = async (): Promise<Notification[]> => {
     const response = await apiClient.get<Notification[]>('/notifications');

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { User, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export const RegisterPage: React.FC = () => {
@@ -32,82 +33,111 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="max-w-md w-full relative z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-bold text-2xl shadow-lg shadow-sky-500/20 mb-3">
+    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4">
+      <div className="max-w-sm w-full py-8">
+        <div className="text-center mb-7">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#0071E3] text-white font-bold text-lg mb-3 shadow-sm">
             S
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Create Employee Account</h1>
-          <p className="text-slate-400 text-xs mt-1">Join ServiceHub Enterprise Portal</p>
+          <h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">
+            ServiceHub
+          </h1>
+          <p className="text-[#6E6E73] text-xs mt-1">
+            Enterprise Employee Registration
+          </p>
         </div>
 
-        <div className="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white border border-[#E5E5E7] rounded-2xl p-6 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+          <div className="mb-5">
+            <h2 className="text-base font-semibold text-[#1D1D1F]">Create Account</h2>
+            <p className="text-[#6E6E73] text-xs mt-0.5">Enter details for employee portal access</p>
+          </div>
+
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-start space-x-2">
-              <span>⚠️</span>
-              <span>{error}</span>
+            <div className="mb-4 p-3 rounded-lg bg-[#FEECEB] border border-[#FCD0CE] text-[#FF3B30] text-xs flex items-start gap-2">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-medium text-[#1D1D1F] mb-1.5">
                 Full Name
               </label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#86868B]">
+                  <User size={15} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Jane Smith"
+                  className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-xs text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/15 transition font-medium"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-medium text-[#1D1D1F] mb-1.5">
                 Work Email Address
               </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#86868B]">
+                  <Mail size={15} />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="jane.smith@company.com"
+                  className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-xs text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/15 transition font-medium"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-medium text-[#1D1D1F] mb-1.5">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#86868B]">
+                  <Lock size={15} />
+                </div>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-xs text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/15 transition font-medium"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-sky-500/25 transition duration-200 disabled:opacity-50 mt-2"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white font-medium text-xs transition duration-150 disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2 cursor-pointer shadow-sm"
             >
-              {loading ? 'Creating Account...' : 'Register Employee Account'}
+              {loading ? (
+                <span>Creating Account...</span>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight size={13} />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
-            Already registered?{' '}
-            <Link to="/login" className="text-sky-400 font-semibold hover:underline">
+          <div className="mt-5 text-center text-xs text-[#6E6E73]">
+            Already have an active account?{' '}
+            <Link to="/login" className="text-[#0071E3] font-medium hover:underline">
               Sign in
             </Link>
           </div>
