@@ -63,10 +63,10 @@
 ## Phase 7 - NOTIFICATIONS + SEARCH
 - [x] Notifications
 - [x] Read/unread state
-- [ ] Search
-- [ ] Filtering
-- [ ] Sorting
-- [ ] Pagination
+- [x] Search
+- [x] Filtering
+- [x] Sorting
+- [x] Pagination
 
 ## Phase 8 - FRONTEND DASHBOARDS
 - [x] Employee dashboard
@@ -82,7 +82,9 @@
 - [x] Audit log viewer
 
 ## Phase 10 - TESTING + QUALITY
-- [ ] Complete quality pass and bug fixes
+- [x] Complete quality pass and bug fixes
+- [x] Expand backend unit tests beyond auth (currently 23 tests pass)
+- [x] Add integration tests for ticket lifecycle
 
 ## Phase 11 - DOCKER + DEPLOYMENT PREPARATION
 - [ ] Production Dockerfiles

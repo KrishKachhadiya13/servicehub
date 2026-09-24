@@ -24,6 +24,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('servicehub_token');
       localStorage.removeItem('servicehub_user');
+      // Force redirect to login page when token expires
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

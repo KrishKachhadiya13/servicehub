@@ -103,14 +103,6 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ allowedRoles }
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {user.role.name === 'ADMIN' && (
-              <Link 
-                to="/admin" 
-                className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold border border-indigo-500/20 transition-all"
-              >
-                Admin Panel
-              </Link>
-            )}
             <div className="relative">
               <button 
                 onClick={() => setShowNotifs(!showNotifs)}
@@ -161,6 +153,21 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ allowedRoles }
               <p className="text-sm font-medium text-white">{user.full_name}</p>
               <p className="text-xs text-slate-400">{user.email}</p>
             </div>
+          </div>
+        </div>
+        <div className="bg-slate-800/50 border-t border-slate-700/60 px-4 sm:px-6 lg:px-8 flex space-x-6">
+          <div className="max-w-7xl mx-auto w-full flex space-x-6">
+            <Link to="/dashboard" className="py-3 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-sky-500 transition-colors">
+              Dashboard
+            </Link>
+            <Link to="/tickets" className="py-3 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-sky-500 transition-colors">
+              Tickets
+            </Link>
+            {user.role.name === 'ADMIN' && (
+              <Link to="/admin" className="py-3 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-indigo-500 transition-colors">
+                Admin Panel
+              </Link>
+            )}
           </div>
         </div>
       </header>

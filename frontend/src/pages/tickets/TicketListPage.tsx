@@ -15,17 +15,24 @@ export const TicketListPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [pageSize] = useState<number>(10);
+
   const loadTickets = async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await fetchTicketsApi({
+        page,
+        size: pageSize,
         search: search || undefined,
         status: statusFilter || undefined,
         priority: priorityFilter || undefined,
       });
       setTickets(data.items);
       setTotal(data.total);
+      setTotalPages(data.pages);
     } catch (err: any) {
       console.error('Failed to load tickets:', err);
       setError('Failed to fetch tickets from server.');
@@ -36,6 +43,11 @@ export const TicketListPage: React.FC = () => {
 
   useEffect(() => {
     loadTickets();
+  }, [search, statusFilter, priorityFilter, page]);
+
+  // Reset to page 1 on filter change
+  useEffect(() => {
+    setPage(1);
   }, [search, statusFilter, priorityFilter]);
 
   return (
@@ -124,6 +136,29 @@ export const TicketListPage: React.FC = () => {
           {tickets.map((t) => (
             <TicketCard key={t.id} ticket={t} />
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-2 py-4">
+          <button
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            Previous
+          </button>
+          <span className="text-slate-400 text-sm">
+            Page <strong className="text-white">{page}</strong> of <strong className="text-white">{totalPages}</strong>
+          </span>
+          <button
+            onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            Next
+          </button>
         </div>
       )}
 
