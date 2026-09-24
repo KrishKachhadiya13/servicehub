@@ -69,10 +69,10 @@
 - [ ] Pagination
 
 ## Phase 8 - FRONTEND DASHBOARDS
-- [ ] Employee dashboard
-- [ ] Support Agent dashboard
-- [ ] Manager dashboard
-- [ ] Admin dashboard
+- [x] Employee dashboard
+- [x] Support Agent dashboard
+- [x] Manager dashboard
+- [x] Admin dashboard
 
 ## Phase 9 - ADMIN FEATURES
 - [ ] User management
