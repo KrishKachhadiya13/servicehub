@@ -75,11 +75,11 @@
 - [x] Admin dashboard
 
 ## Phase 9 - ADMIN FEATURES
-- [ ] User management
-- [ ] Department management
-- [ ] Category management
-- [ ] SLA policy management
-- [ ] Audit log viewer
+- [x] User management
+- [x] Department management
+- [x] Category management
+- [x] SLA policy management
+- [x] Audit log viewer
 
 ## Phase 10 - TESTING + QUALITY
 - [ ] Complete quality pass and bug fixes

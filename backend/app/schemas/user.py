@@ -16,6 +16,10 @@ class UserUpdate(BaseModel):
     department_id: int | None = None
     is_active: bool | None = None
 
+class DepartmentCreate(BaseModel):
+    name: str
+    description: str | None = None
+
 class DepartmentOut(BaseModel):
     id: int
     name: str

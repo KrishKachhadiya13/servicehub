@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, Link } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { getNotificationsApi, markNotificationReadApi, markAllNotificationsReadApi } from '../../api/notifications';
 import type { Notification } from '../../types/notification';
@@ -103,6 +103,14 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ allowedRoles }
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            {user.role.name === 'ADMIN' && (
+              <Link 
+                to="/admin" 
+                className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold border border-indigo-500/20 transition-all"
+              >
+                Admin Panel
+              </Link>
+            )}
             <div className="relative">
               <button 
                 onClick={() => setShowNotifs(!showNotifs)}
